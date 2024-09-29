@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscribed Triangle and Circle Points</title>
+    <style>
+        div {
+            width: 10px;
+            height: 10px;
+            background-color: black;
+            border-radius: 50%;
+            position: absolute;
+        }
+    </style>
+</head>
+<body></body>
+<script>
+    const angleStep = 2 * Math.PI / 360;
+    const centerX = document.documentElement.clientWidth / 2;
+    const centerY = document.documentElement.clientHeight / 2; // Circle's center
+    const radius = centerY;  // Circle's radius
+    const coordsOfCirclePoints = [];
+    const style = document.querySelector('style');
+    let switcher = false;
+
+    // Calculate triangle vertices, evenly spaced around the circumference
+    const triangleVertices = [];
+    for (let i = 0; i < 3; i++) {
+        const angle = Math.PI / 2 + (i * 2 * Math.PI / 3); // 120-degree intervals
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY - radius * Math.sin(angle); // Use negative sine to match the canvas' y-axis
+        triangleVertices.push({x, y});
+    }
+    
+    // Function to draw points on a line between two vertices
+    function drawLinePoints(start, end, numPoints) {
+        for (let i = 0; i < numPoints; i++) {
+            const x = start.x + (end.x - start.x) * (i / numPoints);
+            const y = start.y + (end.y - start.y) * (i / numPoints);
+
+            const triangleDiv = document.createElement('div');
+
+            triangleDiv.classList.add('triangle-point');
+            triangleDiv.style.left = `${x}px`;
+            triangleDiv.style.top = `${y}px`;
+
+            document.body.append(triangleDiv);
+        }
+    }
+
+    // Draw the sides of the triangle
+    const numPointsPerSide = 120; // Adjust this for more/less points
+    
+    drawLinePoints(triangleVertices[2], triangleVertices[0], numPointsPerSide); // Third side
+    drawLinePoints(triangleVertices[0], triangleVertices[1], numPointsPerSide); // First side
+    drawLinePoints(triangleVertices[1], triangleVertices[2], numPointsPerSide); // Second side
+
+    // Circle points
+    for (let i = 30; i < 390; i++) {
+        const theta = angleStep * i;
+        const x = centerX + radius * Math.cos(theta);
+        const y = centerY + radius * Math.sin(theta);
+        coordsOfCirclePoints.push({ x: x.toFixed(2), y: y.toFixed(2) });
+
+        const circleDiv = document.createElement('div');
+        circleDiv.style.left = `${x}px`;
+        circleDiv.style.top = `${y}px`;
+        circleDiv.style.backgroundColor = 'transparent';
+        
+        document.body.append(circleDiv);
+    }
+
+    coordsOfCirclePoints.reverse();
+
+    const trianglePoints = document.querySelectorAll('.triangle-point');
+    trianglePoints.forEach((p, i) => {
+        const keyframes1 = `
+            @keyframes triangle-point-to-circle${i} {
+                from {
+                    top: ${p.style.top};
+                    left: ${p.style.left};
+                }
+                to {
+                    top: ${coordsOfCirclePoints[i].y}px;
+                    left: ${coordsOfCirclePoints[i].x}px;
+                }
+            }
+        `;
+        const keyframes2 = `
+            @keyframes circle-point-to-triangle${i} {
+                from {
+                    top: ${coordsOfCirclePoints[i].y}px;
+                    left: ${coordsOfCirclePoints[i].x}px;
+                }
+                to {
+                    top: ${p.style.top};
+                    left: ${p.style.left};
+                }
+            }
+        `;
+        style.innerHTML += keyframes1;
+        style.innerHTML += keyframes2;
+    });
+
+    document.addEventListener('click', () => {
+        switcher = !switcher;
+        
+        trianglePoints.forEach((p, i) => {
+            if(switcher) {
+                p.style.animation = `triangle-point-to-circle${i} 3s forwards`;
+            } else {
+                p.style.animation = `circle-point-to-triangle${i} 3s forwards`;
+            }
+        });
+    });
+</script>
+</html>
